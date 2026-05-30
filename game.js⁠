@@ -1,0 +1,93 @@
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const scoreDisplay = document.getElementById("score");
+const upBtn = document.getElementById("upBtn");
+
+canvas.width = 400;
+canvas.height = 500;
+
+let score = 0;
+
+const chicken = {
+    x: 185,
+    y: 450,
+    width: 30,
+    height: 30,
+    speed: 40,
+    color: "#ffdd00"
+};
+
+const lanes = [100, 180, 260, 340];
+
+let obstacles = [
+    { x: 0, y: lanes[0], width: 50, height: 30, speed: 3, color: "#ff2222" },
+    { x: 200, y: lanes[1], width: 60, height: 30, speed: -2, color: "#22ff22" },
+    { x: 100, y: lanes[2], width: 50, height: 30, speed: 4, color: "#2222ff" },
+    { x: 300, y: lanes[3], width: 50, height: 30, speed: -3, color: "#ff22ff" }
+];
+
+upBtn.addEventListener("click", moveChicken);
+
+window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp" || e.key === " ") {
+        moveChicken();
+    }
+});
+
+function moveChicken() {
+    chicken.y -= chicken.speed;
+    
+    if (chicken.y < 50) {
+        score++;
+        scoreDisplay.innerText = score;
+        resetChicken();
+    }
+}
+
+function resetChicken() {
+    chicken.x = 185;
+    chicken.y = 450;
+}
+
+function checkCollision(rect1, rect2) {
+    return rect1.x < rect2.x + rect2.width &&
+           rect1.x + rect1.width > rect2.x &&
+           rect1.y < rect2.y + rect2.height &&
+           rect1.y + rect1.height > rect2.y;
+}
+
+function update() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#2e7d32";
+    ctx.fillRect(0, 420, canvas.width, 80);
+    ctx.fillRect(0, 0, canvas.width, 80);
+
+    ctx.fillStyle = "#555";
+    lanes.forEach(laneY => {
+        ctx.fillRect(0, laneY - 5, canvas.width, 40);
+    });
+
+    obstacles.forEach(obs => {
+        obs.x += obs.speed;
+
+        if (obs.speed > 0 && obs.x > canvas.width) obs.x = -obs.width;
+        if (obs.speed < 0 && obs.x < -obs.width) obs.x = canvas.width;
+
+        ctx.fillStyle = obs.color;
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+
+        if (checkCollision(chicken, obs)) {
+            score = 0;
+            scoreDisplay.innerText = score;
+            resetChicken();
+        }
+    });
+
+    ctx.fillStyle = chicken.color;
+    ctx.fillRect(chicken.x, chicken.y, chicken.width, chicken.height);
+
+    requestAnimationFrame(update);
+}
+
+update();
